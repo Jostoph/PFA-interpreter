@@ -20,6 +20,10 @@ On utilise une fonction `eval` qui prend une expression `Expr` à évaluer.
 
 Exemple:
 
+```haskell
+eval env (Sum x y) = eval env x + eval env y
+```
+
 Dans une expression complexe, des appels récursifs sont faits afin d'évaluer les expressions imbriquées.
 
 Pourr la suite, nous avons ajouté un environnement `env` que nous aborderons à l'étape 3.
