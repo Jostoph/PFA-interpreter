@@ -89,7 +89,7 @@ module Interpreter where
   eval env (Prodl l) =
     case l of
       Nil -> 1
-      (Concat x xs) -> (eval env x) * (eval env (Suml xs))
+      (Concat x xs) -> (eval env x) * (eval env (Prodl xs))
 
   -- Show
 
@@ -107,7 +107,7 @@ module Interpreter where
     show (Not x) = "not " ++ show x
     show (Fact n) = "factorial(" ++ show n ++ ")"
     show (Abs x) = "abs(" ++ show x ++ ")"
-    show (Let name value e) = "let " ++ name ++ " == " ++ show value ++ " in " ++ show e
+    show (Let name value e) = "let " ++ name ++ " = " ++ show value ++ " in " ++ show e
     show (Var name) = name
     show (Cond predica x y) = "if " ++ show predica ++ " then " ++ show x ++ " else " ++ show y
     show (Len list) = "len " ++ show list

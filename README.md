@@ -6,6 +6,11 @@
 
 > Le but de ce laboratoire consiste à jeter les bases d'un interpréteur de langage de programmation simple.
 
+## Fichiers et Modules
+
+- `interpreter.hs` : Module **Interpreter**
+- `utils.hs` : Module **Utils**
+
 ## Étape 1
 
 ```haskell
@@ -26,16 +31,17 @@ eval env (Sum x y) = eval env x + eval env y
 
 Dans une expression complexe, des appels récursifs sont faits afin d'évaluer les expressions imbriquées.
 
-Pourr la suite, nous avons ajouté un environnement `env` que nous aborderons à l'étape 3.
+Pour la suite, nous avons ajouté un environnement `env` que nous aborderons à l'étape 3.
 
-### Opérateurs implementés
+### Opérateurs implémentés
 
-Voici une liste des opérateurs ayant été implementés.
+Voici une liste des opérateurs ayant été implémentés.
 
 #### Unaires
 
 * Not: négation logique
 * Fact: effectue la factorielle
+* Abs : valeur absolue
 
 #### Binaires
 
@@ -46,13 +52,32 @@ Voici une liste des opérateurs ayant été implementés.
 * Div: division
 * Sub: soustraction
 * Greater: strictement supérieur
-* Abs: valeur absolue
 * Less: strictement inférieur
 * Comb: effectue une combinaison, c'est à dire un choix de k objets parmi n, où l'ordre n'est pas important.
 
+#### Lists
+
+- Len :  longueur d'une liste
+- Suml : somme des éléments d'une liste
+- Prodl : produit des éléments d'une liste
+
+#### Structure d'une liste
+
+Pour l'implémentation de nos listes nous avons fait une structure mutuellement récursive avec les **Expr** où les éléments d'une **List** sont des **Expr**.
+
+```haskell
+data Expr =
+...
+| Len List
+| Suml List
+| Prodl List
+
+data List = Nil | Concat Expr List
+```
+
 ### Exemples d'exécution
 
-Dans les exemples qui vont suivre, le premier paramètre de eval est l'environnement. Pour l'instant, assumons qu'il est `empty`. Nous reviendrons là-dessus à l'étape 3
+Dans les exemples qui vont suivre, le premier paramètre de *eval* est l'environnement. Pour l'instant, assumons qu'il est `empty` (Map vide). Nous reviendrons là-dessus à l'étape 3
 
 Le cas le plus simple, évaluer une constante:
 
@@ -87,6 +112,15 @@ L'évaluation conditionnelle prend un prédicat, puis évalue le branchement.
 10
 ```
 
+évaluation de fonctions sur listes
+
+```haskell
+> eval e (Len (Concat (Const 1) (Concat (Const 2) (Concat (Const 3) Nil))))
+3
+```
+
+
+
 ## Étape 2
 
 > Dans un second temps, redéfinissez la fonction show en dérivant explicitement le
@@ -99,21 +133,36 @@ Comme demandé, nous avons simplement définit show pour chaque `Expr`
     show (Const x) = show x
     show (Sum x y) = show x ++ " + " ++ show y
     ...
+  instance Show List where
+  	show Nil = "Nil"
+  	show (Concat x xs) = "(" ++ show x ++ " : " ++ show xs ++ ")"
 ```
 
-Nous avons choisit de séparer l'implémentation des fonctions de leur affichage dans l'optique où ça rend le code un peu plus maintenable et lisible. 
+Nous avons choisit de séparer l'évaluation (*eval*) des fonctions de leur affichage (*show*) dans l'optique où ça rend le code un peu plus maintenable et lisible. Il y a donc un peu de redondance dans le *Show* avec les opérateurs (+, -, %, etc...) mais c'est un choix d'implémentation que nous avons décidé de faire. (Nous aurions pu partager nos **Expr** en *Binary* et *Unary* par exemple)
 
 Voici des exemple d'exécution:
 
 ```haskell
-> show (Comb (Const 5) (Sub (Const 5) (Const 2)))
-"C(5, 5 - 2)"
+> Comb (Const 5) (Sub (Const 5) (Const 2))
+C(5, 5 - 2)
 ```
 
 ```haskell
-show (Cond (Greater (Const 3) (Const 2)) (Const 3) (Const 2))
-"if 3 > 2 then 3 else 2"
+> Cond (Greater (Const 3) (Const 2)) (Const 3) (Const 2)
+if 3 > 2 then 3 else 2
 ```
+
+```haskell
+> Suml (Concat (Const 1) (Concat (Sum (Const 1) (Const 2)) Nil))
+sum (1 : (1 + 2 : Nil))
+```
+
+```haskell
+> (Let "c" (Fact (Const 4)) (Sum (Const 3) (Var "c")))
+let c = factorial(4) in 3 + c
+```
+
+
 
 ## Étape 3
 
@@ -126,7 +175,7 @@ Pour cette partie, nous avons choisis d'utiliser une Map avec l'import suivant:
 import Data.Map.Strict as Map
 ```
 
-Cela nous permet de faire un lookup par nom et donc d'avoir cette notion d'environnement qui possède des symboles liés à des valeurs concrètes.
+Cela nous permet de faire un **lookup** par nom et donc d'avoir cette notion d'environnement qui possède des symboles liés à des valeurs concrètes.
 
 Exemple:
 
@@ -157,5 +206,13 @@ Ici avec une expression plus compliquée qu'une constante:
 ```haskell
 > eval empty (Let "c" (Fact (Const 4)) (Sum (Const 3) (Var "c")))
 27
+```
+
+## Gestion des erreurs
+
+Nous avons utilisé la fonction `error String` pour renvoyer un message d'erreur personnalisé quand cela était nécessaire. Par exemple quand on essaye d'utiliser une variable qui n'est pas définie dans l'environnement.
+
+```haskell
+error ("The variable " ++ name ++ "was not found in this environment.")
 ```
 
