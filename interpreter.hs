@@ -2,6 +2,7 @@ module Interpreter where
   
   import Data.Char
   import Data.Map.Strict as Map
+  import Utils
 
   -- Expression
 
@@ -22,11 +23,6 @@ module Interpreter where
     | Let String Expr Expr
     | Var String
     | Cond Expr Expr Expr
-
-  -- utils
-
-  fact 0 = 1
-  fact n = n * fact (n - 1)
 
   -- Expression evaluation
 
