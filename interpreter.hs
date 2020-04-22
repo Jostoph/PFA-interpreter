@@ -23,6 +23,11 @@ module Interpreter where
     | Let String Expr Expr
     | Var String
     | Cond Expr Expr Expr
+    | Len List
+    | Suml List
+    | Prodl List
+
+  data List = Nil | Concat Expr List
 
   -- Expression evaluation
 
@@ -72,6 +77,20 @@ module Interpreter where
 
   eval env (Cond predica x y) = if eval env predica > 0 then eval env x else eval env y
 
+  -- List
+  eval env (Len l) =
+    case l of
+      Nil -> 0
+      (Concat _ tail) -> succ (eval env (Len tail))
+  eval env (Suml l) =
+    case l of
+      Nil -> 0
+      (Concat x xs) -> (eval env x) + (eval env (Suml xs))
+  eval env (Prodl l) =
+    case l of
+      Nil -> 1
+      (Concat x xs) -> (eval env x) * (eval env (Suml xs))
+
   -- Show
 
   instance Show Expr where
@@ -91,3 +110,10 @@ module Interpreter where
     show (Let name value e) = "let " ++ name ++ " == " ++ show value ++ " in " ++ show e
     show (Var name) = name
     show (Cond predica x y) = "if " ++ show predica ++ " then " ++ show x ++ " else " ++ show y
+    show (Len list) = "len " ++ show list
+    show (Suml list) = "sum " ++ show list
+    show (Prodl list) = "prod " ++ show list
+
+  instance Show List where
+    show Nil = "Nil"
+    show (Concat x xs) = "(" ++ show x ++ " : " ++ show xs ++ ")"
